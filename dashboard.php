@@ -27,6 +27,42 @@ if (Auth::isAdmin() || Auth::isSecretarioEjecutivo()) {
 $stats['autorizados'] = $db->selectOne("SELECT COUNT(*) as total FROM cometidos WHERE estado_id = 3")['total'];
 $stats['rechazados'] = $db->selectOne("SELECT COUNT(*) as total FROM cometidos WHERE estado_id = 4")['total'];
 
+// Estadísticas de permisos
+if (Auth::isAdmin() || Auth::isSecretarioEjecutivo()) {
+    $stats['total_permisos'] = $db->selectOne("SELECT COUNT(*) as total FROM solicitudes_permiso")['total'] ?? 0;
+    $stats['permisos_pendientes'] = $db->selectOne("SELECT COUNT(*) as total FROM solicitudes_permiso WHERE estado_id = 2")['total'] ?? 0;
+} else {
+    $stats['total_permisos'] = $db->selectOne(
+        "SELECT COUNT(*) as total FROM solicitudes_permiso WHERE solicitado_por = :user_id OR funcionario_id = :func_id",
+        ['user_id' => $user['id'], 'func_id' => $user['funcionario_id']]
+    )['total'] ?? 0;
+    $stats['permisos_pendientes'] = $db->selectOne(
+        "SELECT COUNT(*) as total FROM solicitudes_permiso WHERE (solicitado_por = :user_id OR funcionario_id = :func_id) AND estado_id = 2",
+        ['user_id' => $user['id'], 'func_id' => $user['funcionario_id']]
+    )['total'] ?? 0;
+}
+
+// Días de feriado disponibles para el usuario actual
+$stats['dias_feriado'] = 0;
+$stats['dias_admin'] = 0;
+if ($user['funcionario_id']) {
+    $feriado = $db->selectOne(
+        "SELECT dias_asignados - dias_utilizados as disponibles 
+         FROM feriados_legales_config 
+         WHERE funcionario_id = :func_id AND anio = :anio",
+        ['func_id' => $user['funcionario_id'], 'anio' => date('Y')]
+    );
+    $stats['dias_feriado'] = $feriado ? $feriado['disponibles'] : 0;
+    
+    $admin = $db->selectOne(
+        "SELECT dias_totales - dias_utilizados as disponibles 
+         FROM permisos_administrativos_config 
+         WHERE funcionario_id = :func_id AND anio = :anio",
+        ['func_id' => $user['funcionario_id'], 'anio' => date('Y')]
+    );
+    $stats['dias_admin'] = $admin ? $admin['disponibles'] : 6;
+}
+
 // Últimos cometidos
 if (Auth::isAdmin() || Auth::isSecretarioEjecutivo()) {
     $ultimosCometidos = $db->select(
@@ -61,8 +97,11 @@ ob_start();
     </div>
 </div>
 
-<!-- Estadísticas -->
+<!-- Estadísticas Cometidos -->
 <div class="row mb-4">
+    <div class="col-12 mb-2">
+        <h5><i class="bi bi-file-earmark-text me-2"></i>Cometidos</h5>
+    </div>
     <div class="col-md-3 col-sm-6 mb-3">
         <div class="card bg-primary text-white h-100">
             <div class="card-body">
@@ -120,6 +159,72 @@ ob_start();
     </div>
 </div>
 
+<!-- Estadísticas Permisos -->
+<?php if (Auth::hasPermission('permisos_ver')): ?>
+<div class="row mb-4">
+    <div class="col-12 mb-2">
+        <h5><i class="bi bi-calendar-check me-2"></i>Permisos</h5>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1">Total Permisos</h6>
+                        <h2 class="mb-0"><?= $stats['total_permisos'] ?></h2>
+                    </div>
+                    <i class="bi bi-calendar-check" style="font-size: 3rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1">Perm. Pendientes</h6>
+                        <h2 class="mb-0"><?= $stats['permisos_pendientes'] ?></h2>
+                    </div>
+                    <i class="bi bi-hourglass" style="font-size: 3rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <?php if ($user['funcionario_id']): ?>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1">Días Feriado <?= date('Y') ?></h6>
+                        <h2 class="mb-0"><?= $stats['dias_feriado'] ?></h2>
+                    </div>
+                    <i class="bi bi-sun" style="font-size: 3rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1">Días Admin <?= date('Y') ?></h6>
+                        <h2 class="mb-0"><?= $stats['dias_admin'] ?></h2>
+                    </div>
+                    <i class="bi bi-clock" style="font-size: 3rem; opacity: 0.3;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
+
 <!-- Acciones rápidas y últimos cometidos -->
 <div class="row">
     <div class="col-md-4 mb-4">
@@ -143,9 +248,32 @@ ob_start();
                     
                     <?php if (Auth::hasPermission('cometidos_autorizar')): ?>
                     <a href="<?= APP_URL ?>/cometidos/pendientes.php" class="btn btn-warning">
-                        <i class="bi bi-clock-history me-2"></i>Pendientes de Autorización
+                        <i class="bi bi-clock-history me-2"></i>Cometidos Pendientes
                         <?php if ($stats['pendientes'] > 0): ?>
                         <span class="badge bg-danger"><?= $stats['pendientes'] ?></span>
+                        <?php endif; ?>
+                    </a>
+                    <?php endif; ?>
+                    
+                    <hr>
+                    
+                    <?php if (Auth::hasPermission('permisos_crear')): ?>
+                    <a href="<?= APP_URL ?>/permisos/crear.php" class="btn btn-success">
+                        <i class="bi bi-calendar-plus me-2"></i>Solicitar Permiso
+                    </a>
+                    <?php endif; ?>
+                    
+                    <?php if (Auth::hasPermission('permisos_ver')): ?>
+                    <a href="<?= APP_URL ?>/permisos/" class="btn btn-outline-success">
+                        <i class="bi bi-calendar-check me-2"></i>Ver Permisos
+                    </a>
+                    <?php endif; ?>
+                    
+                    <?php if (Auth::hasPermission('permisos_autorizar')): ?>
+                    <a href="<?= APP_URL ?>/permisos/pendientes.php" class="btn btn-warning">
+                        <i class="bi bi-hourglass me-2"></i>Permisos Pendientes
+                        <?php if ($stats['permisos_pendientes'] > 0): ?>
+                        <span class="badge bg-danger"><?= $stats['permisos_pendientes'] ?></span>
                         <?php endif; ?>
                     </a>
                     <?php endif; ?>

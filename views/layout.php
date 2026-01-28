@@ -53,6 +53,28 @@
                     </li>
                     <?php endif; ?>
                     
+                    <?php if (Auth::hasPermission('permisos_ver')): ?>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle <?= $currentPage == 'permisos' ? 'active' : '' ?>" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-calendar-check me-1"></i>Permisos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="<?= APP_URL ?>/permisos/">Ver Permisos</a></li>
+                            <?php if (Auth::hasPermission('permisos_crear')): ?>
+                            <li><a class="dropdown-item" href="<?= APP_URL ?>/permisos/crear.php">Nueva Solicitud</a></li>
+                            <?php endif; ?>
+                            <?php if (Auth::hasPermission('permisos_autorizar')): ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<?= APP_URL ?>/permisos/pendientes.php">Pendientes de Autorización</a></li>
+                            <?php endif; ?>
+                            <?php if (Auth::hasPermission('permisos_configurar')): ?>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<?= APP_URL ?>/permisos/configuracion.php">Configurar Feriados</a></li>
+                            <?php endif; ?>
+                        </ul>
+                    </li>
+                    <?php endif; ?>
+                    
                     <?php if (Auth::hasPermission('funcionarios_gestionar')): ?>
                     <li class="nav-item">
                         <a class="nav-link <?= $currentPage == 'funcionarios' ? 'active' : '' ?>" href="<?= APP_URL ?>/funcionarios/">
