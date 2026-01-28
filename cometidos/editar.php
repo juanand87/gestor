@@ -199,25 +199,33 @@ ob_start();
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-12 mb-3">
-                    <label for="funcionarios_ids" class="form-label">Funcionario(s) <span class="text-danger">*</span></label>
-                    <select class="form-select select2-multiple" id="funcionarios_ids" name="funcionarios_ids[]" multiple required>
+                <div class="col-md-8 mb-3">
+                    <label for="funcionario_selector" class="form-label">Agregar funcionario <span class="text-danger">*</span></label>
+                    <select class="form-select select2-single" id="funcionario_selector">
+                        <option value="">Buscar y seleccionar funcionario...</option>
                         <?php foreach ($funcionarios as $f): ?>
                         <option value="<?= $f['id'] ?>" 
                                 data-rut="<?= e($f['rut']) ?>" 
-                                data-cargo="<?= e($f['cargo']) ?>"
-                                <?= (isset($_POST['funcionarios_ids']) && in_array($f['id'], $_POST['funcionarios_ids'])) ? 'selected' : '' ?>>
+                                data-cargo="<?= e($f['cargo']) ?>">
                             <?= e($f['apellido_paterno'] . ' ' . $f['apellido_materno'] . ', ' . $f['nombre'] . ' - ' . $f['rut']) ?>
                         </option>
                         <?php endforeach; ?>
                     </select>
-                    <div class="form-text">Puede seleccionar uno o más funcionarios para este cometido.</div>
+                    <div class="form-text">Seleccione funcionarios uno a uno. Puede agregar múltiples funcionarios.</div>
+                </div>
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <button type="button" id="btn_agregar_funcionario" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-plus-circle me-2"></i>Agregar
+                    </button>
                 </div>
             </div>
             
+            <!-- Inputs ocultos para los funcionarios -->
+            <div id="funcionarios_hidden_inputs"></div>
+            
             <!-- Tabla de funcionarios seleccionados -->
             <div id="funcionarios_seleccionados" class="mt-3" style="display: none;">
-                <h6 class="text-muted">Funcionarios seleccionados:</h6>
+                <h6 class="text-muted"><i class="bi bi-people me-2"></i>Funcionarios seleccionados:</h6>
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered" id="tabla_funcionarios">
                         <thead class="table-light">
@@ -225,11 +233,16 @@ ob_start();
                                 <th>Nombre</th>
                                 <th>RUT</th>
                                 <th>Cargo</th>
+                                <th width="50" class="text-center">Quitar</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
+            </div>
+            
+            <div id="funcionarios_vacio" class="alert alert-warning mt-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>Debe agregar al menos un funcionario.
             </div>
         </div>
     </div>
@@ -455,37 +468,96 @@ funcionariosData[<?= $f['id'] ?>] = {
 };
 <?php endforeach; ?>
 
+var funcionariosSeleccionados = [];
+
 $(document).ready(function() {
-    // Inicializar Select2 múltiple
-    $('.select2-multiple').select2({
+    // Inicializar Select2 para selector individual
+    $('.select2-single').select2({
         theme: 'bootstrap-5',
         language: 'es',
-        placeholder: 'Seleccione uno o más funcionarios...',
-        allowClear: true,
-        closeOnSelect: false
+        placeholder: 'Buscar y seleccionar funcionario...',
+        allowClear: true
     });
     
-    // Actualizar tabla de funcionarios seleccionados
-    $('#funcionarios_ids').on('change', function() {
-        var selected = $(this).val();
-        var tbody = $('#tabla_funcionarios tbody');
-        tbody.empty();
+    // Cargar funcionarios actuales del cometido
+    <?php foreach ($funcionariosActualesIds as $fid): ?>
+    funcionariosSeleccionados.push(<?= (int)$fid ?>);
+    <?php endforeach; ?>
+    actualizarTablaFuncionarios();
+    
+    // Botón agregar funcionario
+    $('#btn_agregar_funcionario').on('click', function() {
+        var id = $('#funcionario_selector').val();
+        if (!id) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Seleccione un funcionario',
+                text: 'Debe seleccionar un funcionario del listado antes de agregar.'
+            });
+            return;
+        }
         
-        if (selected && selected.length > 0) {
+        id = parseInt(id);
+        if (funcionariosSeleccionados.indexOf(id) !== -1) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Funcionario ya agregado',
+                text: 'Este funcionario ya está en la lista.'
+            });
+            return;
+        }
+        
+        funcionariosSeleccionados.push(id);
+        actualizarTablaFuncionarios();
+        
+        // Limpiar selector
+        $('#funcionario_selector').val('').trigger('change');
+    });
+    
+    // Función para actualizar la tabla
+    function actualizarTablaFuncionarios() {
+        var tbody = $('#tabla_funcionarios tbody');
+        var hiddenInputs = $('#funcionarios_hidden_inputs');
+        tbody.empty();
+        hiddenInputs.empty();
+        
+        if (funcionariosSeleccionados.length > 0) {
             $('#funcionarios_seleccionados').show();
-            selected.forEach(function(id) {
+            $('#funcionarios_vacio').hide();
+            
+            funcionariosSeleccionados.forEach(function(id) {
                 var f = funcionariosData[id];
                 if (f) {
-                    tbody.append('<tr><td>' + f.nombre + '</td><td>' + f.rut + '</td><td>' + f.cargo + '</td></tr>');
+                    tbody.append(
+                        '<tr data-id="' + id + '">' +
+                        '<td>' + f.nombre + '</td>' +
+                        '<td>' + f.rut + '</td>' +
+                        '<td>' + f.cargo + '</td>' +
+                        '<td class="text-center">' +
+                        '<button type="button" class="btn btn-sm btn-outline-danger btn-quitar" data-id="' + id + '" title="Quitar funcionario">' +
+                        '<i class="bi bi-trash"></i>' +
+                        '</button>' +
+                        '</td>' +
+                        '</tr>'
+                    );
+                    hiddenInputs.append('<input type="hidden" name="funcionarios_ids[]" value="' + id + '">');
                 }
             });
         } else {
             $('#funcionarios_seleccionados').hide();
+            $('#funcionarios_vacio').show();
         }
-    });
+    }
     
-    // Trigger inicial
-    $('#funcionarios_ids').trigger('change');
+    // Eliminar funcionario de la tabla
+    $(document).on('click', '.btn-quitar', function() {
+        var id = parseInt($(this).data('id'));
+        var index = funcionariosSeleccionados.indexOf(id);
+        if (index > -1) {
+            funcionariosSeleccionados.splice(index, 1);
+        }
+        actualizarTablaFuncionarios();
+    });
     
     // Mostrar/ocultar campo de patente
     $('input[name="medio_traslado"]').on('change', function() {
