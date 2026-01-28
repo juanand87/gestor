@@ -10,30 +10,42 @@ $user = Session::getUser();
 if (Auth::isAdmin() || Auth::isSecretarioEjecutivo()) {
     $cometidos = $db->select(
         "SELECT c.*, 
-                f.nombre as func_nombre, f.apellido_paterno as func_apellido, f.rut as func_rut,
                 u.username as creado_por_username,
                 e.nombre as estado_nombre, e.color as estado_color
          FROM cometidos c
-         INNER JOIN funcionarios f ON c.funcionario_id = f.id
          INNER JOIN usuarios u ON c.creado_por = u.id
          INNER JOIN estados_documento e ON c.estado_id = e.id
          ORDER BY c.created_at DESC"
     );
 } else {
+    // Para usuarios normales: ver cometidos que crearon o donde están asignados
     $cometidos = $db->select(
-        "SELECT c.*, 
-                f.nombre as func_nombre, f.apellido_paterno as func_apellido, f.rut as func_rut,
+        "SELECT DISTINCT c.*, 
                 u.username as creado_por_username,
                 e.nombre as estado_nombre, e.color as estado_color
          FROM cometidos c
-         INNER JOIN funcionarios f ON c.funcionario_id = f.id
          INNER JOIN usuarios u ON c.creado_por = u.id
          INNER JOIN estados_documento e ON c.estado_id = e.id
-         WHERE c.creado_por = :user_id OR c.funcionario_id = :func_id
+         LEFT JOIN cometidos_funcionarios cf ON c.id = cf.cometido_id
+         WHERE c.creado_por = :user_id 
+            OR cf.funcionario_id = (SELECT funcionario_id FROM usuarios WHERE id = :user_id2)
          ORDER BY c.created_at DESC",
-        ['user_id' => $user['id'], 'func_id' => $user['funcionario_id']]
+        ['user_id' => $user['id'], 'user_id2' => $user['id']]
     );
 }
+
+// Obtener funcionarios para cada cometido
+foreach ($cometidos as &$c) {
+    $funcionarios = $db->select(
+        "SELECT f.id, f.nombre, f.apellido_paterno as apellido, f.rut 
+         FROM funcionarios f 
+         INNER JOIN cometidos_funcionarios cf ON f.id = cf.funcionario_id 
+         WHERE cf.cometido_id = :cometido_id",
+        ['cometido_id' => $c['id']]
+    );
+    $c['funcionarios'] = $funcionarios ?: [];
+}
+unset($c); // Romper la referencia
 
 $pageTitle = 'Cometidos';
 $currentPage = 'cometidos';
@@ -73,8 +85,7 @@ ob_start();
                     <thead>
                         <tr>
                             <th>N° Cometido</th>
-                            <th>Funcionario</th>
-                            <th>RUT</th>
+                            <th>Funcionario(s)</th>
                             <th>Destino</th>
                             <th>Fecha Inicio</th>
                             <th>Fecha Término</th>
@@ -86,8 +97,29 @@ ob_start();
                         <?php foreach ($cometidos as $c): ?>
                         <tr>
                             <td><strong><?= e($c['numero_cometido']) ?></strong></td>
-                            <td><?= e($c['func_nombre'] . ' ' . $c['func_apellido']) ?></td>
-                            <td><?= e($c['func_rut']) ?></td>
+                            <td>
+                                <?php if (count($c['funcionarios']) == 1): ?>
+                                    <?= e($c['funcionarios'][0]['nombre'] . ' ' . $c['funcionarios'][0]['apellido']) ?>
+                                    <br><small class="text-muted"><?= e($c['funcionarios'][0]['rut']) ?></small>
+                                <?php elseif (count($c['funcionarios']) > 1): ?>
+                                    <span class="badge bg-info"><?= count($c['funcionarios']) ?> funcionarios</span>
+                                    <button type="button" class="btn btn-link btn-sm p-0 ms-1" 
+                                            data-bs-toggle="popover" 
+                                            data-bs-trigger="hover focus"
+                                            data-bs-html="true"
+                                            data-bs-content="<?php 
+                                                $list = '';
+                                                foreach ($c['funcionarios'] as $f) {
+                                                    $list .= e($f['nombre'] . ' ' . $f['apellido']) . '<br>';
+                                                }
+                                                echo $list;
+                                            ?>">
+                                        <i class="bi bi-info-circle"></i>
+                                    </button>
+                                <?php else: ?>
+                                    <span class="text-muted">Sin asignar</span>
+                                <?php endif; ?>
+                            </td>
                             <td><?= e($c['ciudad'] . ', ' . $c['comuna']) ?></td>
                             <td><?= formatDate($c['fecha_inicio']) ?></td>
                             <td><?= formatDate($c['fecha_termino']) ?></td>
@@ -119,5 +151,21 @@ ob_start();
 
 <?php
 $content = ob_get_clean();
+
+// JavaScript para inicializar popovers
+ob_start();
+?>
+<script>
+$(document).ready(function() {
+    // Inicializar popovers de Bootstrap
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl);
+    });
+});
+</script>
+<?php
+$scripts = ob_get_clean();
+
 include VIEWS_PATH . 'layout.php';
 ?>

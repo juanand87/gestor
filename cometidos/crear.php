@@ -24,7 +24,8 @@ $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validación
-    $funcionario_id = (int)($_POST['funcionario_id'] ?? 0);
+    $funcionarios_ids = $_POST['funcionarios_ids'] ?? [];
+    $funcionarios_ids = array_filter(array_map('intval', $funcionarios_ids));
     $autoridad_id = (int)($_POST['autoridad_id'] ?? 0);
     $objetivo = trim($_POST['objetivo'] ?? '');
     $ciudad = trim($_POST['ciudad'] ?? '');
@@ -43,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accion = $_POST['accion'] ?? 'guardar';
     
     // Validaciones
-    if ($funcionario_id <= 0) $errors[] = 'Debe seleccionar un funcionario';
+    if (empty($funcionarios_ids)) $errors[] = 'Debe seleccionar al menos un funcionario';
     if (empty($objetivo)) $errors[] = 'El objetivo del cometido es requerido';
     if (empty($ciudad)) $errors[] = 'La ciudad es requerida';
     if (empty($comuna)) $errors[] = 'La comuna es requerida';
@@ -69,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $data = [
                 'numero_cometido' => $numero_cometido,
-                'funcionario_id' => $funcionario_id,
+                'funcionario_id' => $funcionarios_ids[0], // Primer funcionario como principal
                 'creado_por' => $user['id'],
                 'autoridad_id' => $autoridad_id ?: null,
                 'objetivo' => $objetivo,
@@ -91,6 +92,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ];
             
             $cometido_id = $db->insert('cometidos', $data);
+            
+            // Insertar todos los funcionarios en la tabla de relación
+            foreach ($funcionarios_ids as $func_id) {
+                $db->insert('cometidos_funcionarios', [
+                    'cometido_id' => $cometido_id,
+                    'funcionario_id' => $func_id
+                ]);
+            }
             
             // Registrar en historial
             $accion_historial = ($accion === 'enviar') ? 'Cometido creado y enviado a autorización' : 'Cometido creado como borrador';
@@ -144,31 +153,40 @@ ob_start();
     <!-- 1. Identificación del Funcionario -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-person me-2"></i>1. Identificación del Funcionario</h5>
+            <h5 class="mb-0"><i class="bi bi-people me-2"></i>1. Identificación del/los Funcionario(s)</h5>
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="funcionario_id" class="form-label">Funcionario <span class="text-danger">*</span></label>
-                    <select class="form-select select2" id="funcionario_id" name="funcionario_id" required>
-                        <option value="">Seleccione un funcionario...</option>
+                <div class="col-12 mb-3">
+                    <label for="funcionarios_ids" class="form-label">Funcionario(s) <span class="text-danger">*</span></label>
+                    <select class="form-select select2-multiple" id="funcionarios_ids" name="funcionarios_ids[]" multiple required>
                         <?php foreach ($funcionarios as $f): ?>
                         <option value="<?= $f['id'] ?>" 
                                 data-rut="<?= e($f['rut']) ?>" 
                                 data-cargo="<?= e($f['cargo']) ?>"
-                                <?= (isset($_POST['funcionario_id']) && $_POST['funcionario_id'] == $f['id']) ? 'selected' : '' ?>>
-                            <?= e($f['apellido_paterno'] . ' ' . $f['apellido_materno'] . ', ' . $f['nombre']) ?>
+                                <?= (isset($_POST['funcionarios_ids']) && in_array($f['id'], $_POST['funcionarios_ids'])) ? 'selected' : '' ?>>
+                            <?= e($f['apellido_paterno'] . ' ' . $f['apellido_materno'] . ', ' . $f['nombre'] . ' - ' . $f['rut']) ?>
                         </option>
                         <?php endforeach; ?>
                     </select>
+                    <div class="form-text">Puede seleccionar uno o más funcionarios para este cometido.</div>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">RUT</label>
-                    <input type="text" class="form-control" id="funcionario_rut" readonly>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Cargo</label>
-                    <input type="text" class="form-control" id="funcionario_cargo" readonly>
+            </div>
+            
+            <!-- Tabla de funcionarios seleccionados -->
+            <div id="funcionarios_seleccionados" class="mt-3" style="display: none;">
+                <h6 class="text-muted">Funcionarios seleccionados:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered" id="tabla_funcionarios">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>RUT</th>
+                                <th>Cargo</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -405,16 +423,46 @@ $content = ob_get_clean();
 ob_start();
 ?>
 <script>
+var funcionariosData = {};
+<?php foreach ($funcionarios as $f): ?>
+funcionariosData[<?= $f['id'] ?>] = {
+    nombre: '<?= e($f['nombre'] . ' ' . $f['apellido_paterno'] . ' ' . $f['apellido_materno']) ?>',
+    rut: '<?= e($f['rut']) ?>',
+    cargo: '<?= e($f['cargo']) ?>'
+};
+<?php endforeach; ?>
+
 $(document).ready(function() {
-    // Actualizar datos del funcionario al seleccionar
-    $('#funcionario_id').on('change', function() {
-        var selected = $(this).find(':selected');
-        $('#funcionario_rut').val(selected.data('rut') || '');
-        $('#funcionario_cargo').val(selected.data('cargo') || '');
+    // Inicializar Select2 múltiple
+    $('.select2-multiple').select2({
+        theme: 'bootstrap-5',
+        language: 'es',
+        placeholder: 'Seleccione uno o más funcionarios...',
+        allowClear: true,
+        closeOnSelect: false
     });
     
-    // Trigger inicial si hay valor seleccionado
-    $('#funcionario_id').trigger('change');
+    // Actualizar tabla de funcionarios seleccionados
+    $('#funcionarios_ids').on('change', function() {
+        var selected = $(this).val();
+        var tbody = $('#tabla_funcionarios tbody');
+        tbody.empty();
+        
+        if (selected && selected.length > 0) {
+            $('#funcionarios_seleccionados').show();
+            selected.forEach(function(id) {
+                var f = funcionariosData[id];
+                if (f) {
+                    tbody.append('<tr><td>' + f.nombre + '</td><td>' + f.rut + '</td><td>' + f.cargo + '</td></tr>');
+                }
+            });
+        } else {
+            $('#funcionarios_seleccionados').hide();
+        }
+    });
+    
+    // Trigger inicial
+    $('#funcionarios_ids').trigger('change');
     
     // Mostrar/ocultar campo de patente
     $('input[name="medio_traslado"]').on('change', function() {

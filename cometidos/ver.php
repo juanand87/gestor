@@ -36,9 +36,33 @@ if (!$cometido) {
     redirect(APP_URL . '/cometidos/');
 }
 
+// Obtener todos los funcionarios del cometido
+$funcionariosCometido = $db->select(
+    "SELECT f.* FROM funcionarios f
+     INNER JOIN cometidos_funcionarios cf ON f.id = cf.funcionario_id
+     WHERE cf.cometido_id = :id
+     ORDER BY cf.id",
+    ['id' => $id]
+);
+
+// Si no hay en la tabla de relación, usar el funcionario principal
+if (empty($funcionariosCometido)) {
+    $funcionariosCometido = $db->select(
+        "SELECT * FROM funcionarios WHERE id = :id",
+        ['id' => $cometido['funcionario_id']]
+    );
+}
+
 // Verificar permisos de visualización
 if (!Auth::isAdmin() && !Auth::isSecretarioEjecutivo()) {
-    if ($cometido['creado_por'] != $user['id'] && $cometido['funcionario_id'] != $user['funcionario_id']) {
+    $esFuncionario = false;
+    foreach ($funcionariosCometido as $fc) {
+        if ($fc['id'] == $user['funcionario_id']) {
+            $esFuncionario = true;
+            break;
+        }
+    }
+    if ($cometido['creado_por'] != $user['id'] && !$esFuncionario) {
         Session::setFlash('error', 'No tiene permisos para ver este cometido.');
         redirect(APP_URL . '/cometidos/');
     }
@@ -137,21 +161,44 @@ ob_start();
             <div class="card-body">
                 <!-- 1. Identificación del Funcionario -->
                 <div class="mb-4">
-                    <h6 class="text-primary"><i class="bi bi-person me-2"></i>1. Identificación del Funcionario</h6>
+                    <h6 class="text-primary"><i class="bi bi-people me-2"></i>1. Identificación del/los Funcionario(s)</h6>
+                    <?php if (count($funcionariosCometido) == 1): ?>
                     <div class="row">
                         <div class="col-md-4">
                             <small class="text-muted">Nombre Completo</small>
-                            <p class="fw-bold"><?= e($cometido['func_nombre'] . ' ' . $cometido['func_apellido_paterno'] . ' ' . $cometido['func_apellido_materno']) ?></p>
+                            <p class="fw-bold"><?= e($funcionariosCometido[0]['nombre'] . ' ' . $funcionariosCometido[0]['apellido_paterno'] . ' ' . $funcionariosCometido[0]['apellido_materno']) ?></p>
                         </div>
                         <div class="col-md-4">
                             <small class="text-muted">RUT</small>
-                            <p class="fw-bold"><?= e($cometido['func_rut']) ?></p>
+                            <p class="fw-bold"><?= e($funcionariosCometido[0]['rut']) ?></p>
                         </div>
                         <div class="col-md-4">
                             <small class="text-muted">Cargo</small>
-                            <p class="fw-bold"><?= e($cometido['func_cargo']) ?></p>
+                            <p class="fw-bold"><?= e($funcionariosCometido[0]['cargo']) ?></p>
                         </div>
                     </div>
+                    <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre Completo</th>
+                                    <th>RUT</th>
+                                    <th>Cargo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($funcionariosCometido as $fc): ?>
+                                <tr>
+                                    <td><?= e($fc['nombre'] . ' ' . $fc['apellido_paterno'] . ' ' . $fc['apellido_materno']) ?></td>
+                                    <td><?= e($fc['rut']) ?></td>
+                                    <td><?= e($fc['cargo']) ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- 2. Autoridad que dispone -->

@@ -8,18 +8,29 @@ $db = Database::getInstance();
 // Obtener cometidos pendientes de autorización
 $cometidos = $db->select(
     "SELECT c.*, 
-            f.nombre as func_nombre, f.apellido_paterno as func_apellido, f.rut as func_rut,
             u.username as creado_por_username,
             uf.nombre as creador_nombre, uf.apellido_paterno as creador_apellido,
             e.nombre as estado_nombre, e.color as estado_color
      FROM cometidos c
-     INNER JOIN funcionarios f ON c.funcionario_id = f.id
      INNER JOIN usuarios u ON c.creado_por = u.id
-     INNER JOIN funcionarios uf ON u.funcionario_id = uf.id
+     LEFT JOIN funcionarios uf ON u.funcionario_id = uf.id
      INNER JOIN estados_documento e ON c.estado_id = e.id
      WHERE c.estado_id = 2
      ORDER BY c.fecha_envio_autorizacion ASC"
 );
+
+// Obtener funcionarios para cada cometido
+foreach ($cometidos as &$c) {
+    $funcionarios = $db->select(
+        "SELECT f.id, f.nombre, f.apellido_paterno as apellido, f.rut 
+         FROM funcionarios f 
+         INNER JOIN cometidos_funcionarios cf ON f.id = cf.funcionario_id 
+         WHERE cf.cometido_id = :cometido_id",
+        ['cometido_id' => $c['id']]
+    );
+    $c['funcionarios'] = $funcionarios ?: [];
+}
+unset($c);
 
 $pageTitle = 'Pendientes de Autorización';
 $currentPage = 'cometidos';
@@ -63,9 +74,23 @@ ob_start();
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-6">
-                        <small class="text-muted">Funcionario</small>
-                        <p class="mb-0 fw-bold"><?= e($c['func_nombre'] . ' ' . $c['func_apellido']) ?></p>
-                        <small class="text-muted"><?= e($c['func_rut']) ?></small>
+                        <small class="text-muted">Funcionario(s)</small>
+                        <?php if (count($c['funcionarios']) == 1): ?>
+                            <p class="mb-0 fw-bold"><?= e($c['funcionarios'][0]['nombre'] . ' ' . $c['funcionarios'][0]['apellido']) ?></p>
+                            <small class="text-muted"><?= e($c['funcionarios'][0]['rut']) ?></small>
+                        <?php elseif (count($c['funcionarios']) > 1): ?>
+                            <p class="mb-0 fw-bold">
+                                <span class="badge bg-info"><?= count($c['funcionarios']) ?> funcionarios</span>
+                            </p>
+                            <small class="text-muted">
+                                <?php 
+                                $nombres = array_map(function($f) { return $f['nombre'] . ' ' . $f['apellido']; }, $c['funcionarios']);
+                                echo e(implode(', ', $nombres));
+                                ?>
+                            </small>
+                        <?php else: ?>
+                            <p class="mb-0 text-muted">Sin asignar</p>
+                        <?php endif; ?>
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Destino</small>
