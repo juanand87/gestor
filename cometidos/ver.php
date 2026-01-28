@@ -158,148 +158,187 @@ ob_start();
                     <?= e($cometido['estado_nombre']) ?>
                 </span>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <!-- 1. Identificación del Funcionario -->
-                <div class="mb-4">
-                    <h6 class="text-primary"><i class="bi bi-people me-2"></i>1. Identificación del/los Funcionario(s)</h6>
-                    <?php if (count($funcionariosCometido) == 1): ?>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <small class="text-muted">Nombre Completo</small>
-                            <p class="fw-bold"><?= e($funcionariosCometido[0]['nombre'] . ' ' . $funcionariosCometido[0]['apellido_paterno'] . ' ' . $funcionariosCometido[0]['apellido_materno']) ?></p>
-                        </div>
-                        <div class="col-md-4">
-                            <small class="text-muted">RUT</small>
-                            <p class="fw-bold"><?= e($funcionariosCometido[0]['rut']) ?></p>
-                        </div>
-                        <div class="col-md-4">
-                            <small class="text-muted">Cargo</small>
-                            <p class="fw-bold"><?= e($funcionariosCometido[0]['cargo']) ?></p>
-                        </div>
+                <div class="border-bottom border-primary border-3">
+                    <div class="bg-primary bg-opacity-10 px-3 py-2">
+                        <h6 class="text-primary mb-0"><i class="bi bi-people me-2"></i>1. Identificación del/los Funcionario(s)</h6>
                     </div>
-                    <?php else: ?>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Nombre Completo</th>
-                                    <th>RUT</th>
-                                    <th>Cargo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($funcionariosCometido as $fc): ?>
-                                <tr>
-                                    <td><?= e($fc['nombre'] . ' ' . $fc['apellido_paterno'] . ' ' . $fc['apellido_materno']) ?></td>
-                                    <td><?= e($fc['rut']) ?></td>
-                                    <td><?= e($fc['cargo']) ?></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                    <div class="p-3">
+                        <?php if (count($funcionariosCometido) == 1): ?>
+                        <div class="row">
+                            <div class="col-md-4 border-end">
+                                <small class="text-muted d-block">Nombre Completo</small>
+                                <p class="fw-bold mb-0"><?= e($funcionariosCometido[0]['nombre'] . ' ' . $funcionariosCometido[0]['apellido_paterno'] . ' ' . $funcionariosCometido[0]['apellido_materno']) ?></p>
+                            </div>
+                            <div class="col-md-4 border-end">
+                                <small class="text-muted d-block">RUT</small>
+                                <p class="fw-bold mb-0"><?= e($funcionariosCometido[0]['rut']) ?></p>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Cargo</small>
+                                <p class="fw-bold mb-0"><?= e($funcionariosCometido[0]['cargo']) ?></p>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre Completo</th>
+                                        <th>RUT</th>
+                                        <th>Cargo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($funcionariosCometido as $fc): ?>
+                                    <tr>
+                                        <td><?= e($fc['nombre'] . ' ' . $fc['apellido_paterno'] . ' ' . $fc['apellido_materno']) ?></td>
+                                        <td><?= e($fc['rut']) ?></td>
+                                        <td><?= e($fc['cargo']) ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
                 </div>
                 
                 <!-- 2. Autoridad que dispone -->
                 <?php if ($cometido['auto_nombre']): ?>
-                <div class="mb-4">
-                    <h6 class="text-primary"><i class="bi bi-person-badge me-2"></i>2. Autoridad que Dispone el Cometido</h6>
-                    <p class="fw-bold"><?= e($cometido['auto_nombre'] . ' ' . $cometido['auto_apellido'] . ' - ' . $cometido['auto_cargo']) ?></p>
+                <div class="border-bottom border-primary border-3">
+                    <div class="bg-primary bg-opacity-10 px-3 py-2">
+                        <h6 class="text-primary mb-0"><i class="bi bi-person-badge me-2"></i>2. Autoridad que Dispone el Cometido</h6>
+                    </div>
+                    <div class="p-3">
+                        <p class="fw-bold mb-0"><?= e($cometido['auto_nombre'] . ' ' . $cometido['auto_apellido'] . ' - ' . $cometido['auto_cargo']) ?></p>
+                    </div>
                 </div>
                 <?php endif; ?>
                 
                 <!-- 3. Objetivo -->
-                <div class="mb-4">
-                    <h6 class="text-primary"><i class="bi bi-bullseye me-2"></i>3. Objetivo del Cometido</h6>
-                    <p><?= nl2br(e($cometido['objetivo'])) ?></p>
+                <div class="border-bottom border-primary border-3">
+                    <div class="bg-primary bg-opacity-10 px-3 py-2">
+                        <h6 class="text-primary mb-0"><i class="bi bi-bullseye me-2"></i>3. Objetivo del Cometido</h6>
+                    </div>
+                    <div class="p-3">
+                        <p class="mb-0"><?= nl2br(e($cometido['objetivo'])) ?></p>
+                    </div>
                 </div>
                 
                 <!-- 4. Lugar -->
-                <div class="mb-4">
-                    <h6 class="text-primary"><i class="bi bi-geo-alt me-2"></i>4. Lugar del Cometido</h6>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <small class="text-muted">Ciudad</small>
-                            <p class="fw-bold"><?= e($cometido['ciudad']) ?></p>
+                <div class="border-bottom border-primary border-3">
+                    <div class="bg-primary bg-opacity-10 px-3 py-2">
+                        <h6 class="text-primary mb-0"><i class="bi bi-geo-alt me-2"></i>4. Lugar del Cometido</h6>
+                    </div>
+                    <div class="p-3">
+                        <div class="row">
+                            <div class="col-md-4 border-end">
+                                <small class="text-muted d-block">Ciudad</small>
+                                <p class="fw-bold mb-0"><?= e($cometido['ciudad']) ?></p>
+                            </div>
+                            <div class="col-md-4 <?= $cometido['lugar_descripcion'] ? 'border-end' : '' ?>">
+                                <small class="text-muted d-block">Comuna</small>
+                                <p class="fw-bold mb-0"><?= e($cometido['comuna']) ?></p>
+                            </div>
+                            <?php if ($cometido['lugar_descripcion']): ?>
+                            <div class="col-md-4">
+                                <small class="text-muted d-block">Descripción</small>
+                                <p class="fw-bold mb-0"><?= e($cometido['lugar_descripcion']) ?></p>
+                            </div>
+                            <?php endif; ?>
                         </div>
-                        <div class="col-md-4">
-                            <small class="text-muted">Comuna</small>
-                            <p class="fw-bold"><?= e($cometido['comuna']) ?></p>
-                        </div>
-                        <?php if ($cometido['lugar_descripcion']): ?>
-                        <div class="col-md-4">
-                            <small class="text-muted">Descripción</small>
-                            <p class="fw-bold"><?= e($cometido['lugar_descripcion']) ?></p>
-                        </div>
-                        <?php endif; ?>
                     </div>
                 </div>
                 
                 <!-- 5. Fecha y Duración -->
-                <div class="mb-4">
-                    <h6 class="text-primary"><i class="bi bi-calendar-event me-2"></i>5. Fecha y Duración</h6>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <small class="text-muted">Fecha Inicio</small>
-                            <p class="fw-bold"><?= formatDate($cometido['fecha_inicio']) ?></p>
+                <div class="border-bottom border-primary border-3">
+                    <div class="bg-primary bg-opacity-10 px-3 py-2">
+                        <h6 class="text-primary mb-0"><i class="bi bi-calendar-event me-2"></i>5. Fecha y Duración</h6>
+                    </div>
+                    <div class="p-3">
+                        <div class="row">
+                            <div class="col-md-3 border-end">
+                                <small class="text-muted d-block">Fecha Inicio</small>
+                                <p class="fw-bold mb-0"><?= formatDate($cometido['fecha_inicio']) ?></p>
+                            </div>
+                            <div class="col-md-3 <?= ($cometido['horario_inicio'] || $cometido['horario_termino']) ? 'border-end' : '' ?>">
+                                <small class="text-muted d-block">Fecha Término</small>
+                                <p class="fw-bold mb-0"><?= formatDate($cometido['fecha_termino']) ?></p>
+                            </div>
+                            <?php if ($cometido['horario_inicio']): ?>
+                            <div class="col-md-3 <?= $cometido['horario_termino'] ? 'border-end' : '' ?>">
+                                <small class="text-muted d-block">Horario Inicio</small>
+                                <p class="fw-bold mb-0"><?= e($cometido['horario_inicio']) ?></p>
+                            </div>
+                            <?php endif; ?>
+                            <?php if ($cometido['horario_termino']): ?>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Horario Término</small>
+                                <p class="fw-bold mb-0"><?= e($cometido['horario_termino']) ?></p>
+                            </div>
+                            <?php endif; ?>
                         </div>
-                        <div class="col-md-3">
-                            <small class="text-muted">Fecha Término</small>
-                            <p class="fw-bold"><?= formatDate($cometido['fecha_termino']) ?></p>
-                        </div>
-                        <?php if ($cometido['horario_inicio']): ?>
-                        <div class="col-md-3">
-                            <small class="text-muted">Horario Inicio</small>
-                            <p class="fw-bold"><?= e($cometido['horario_inicio']) ?></p>
-                        </div>
-                        <?php endif; ?>
-                        <?php if ($cometido['horario_termino']): ?>
-                        <div class="col-md-3">
-                            <small class="text-muted">Horario Término</small>
-                            <p class="fw-bold"><?= e($cometido['horario_termino']) ?></p>
-                        </div>
-                        <?php endif; ?>
                     </div>
                 </div>
                 
                 <!-- 6. Medio de Traslado -->
-                <div class="mb-4">
-                    <h6 class="text-primary"><i class="bi bi-car-front me-2"></i>6. Medio de Traslado</h6>
-                    <p class="fw-bold">
-                        <?= getMedioTrasladoTexto($cometido['medio_traslado']) ?>
-                        <?php if ($cometido['patente_vehiculo']): ?>
-                            <span class="badge bg-secondary ms-2">Patente: <?= e($cometido['patente_vehiculo']) ?></span>
-                        <?php endif; ?>
-                    </p>
+                <div class="border-bottom border-primary border-3">
+                    <div class="bg-primary bg-opacity-10 px-3 py-2">
+                        <h6 class="text-primary mb-0"><i class="bi bi-car-front me-2"></i>6. Medio de Traslado</h6>
+                    </div>
+                    <div class="p-3">
+                        <p class="fw-bold mb-0">
+                            <?= getMedioTrasladoTexto($cometido['medio_traslado']) ?>
+                            <?php if ($cometido['patente_vehiculo']): ?>
+                                <span class="badge bg-secondary ms-2">Patente: <?= e($cometido['patente_vehiculo']) ?></span>
+                            <?php endif; ?>
+                        </p>
+                    </div>
                 </div>
                 
                 <!-- 7. Financiamiento -->
-                <div class="mb-4">
-                    <h6 class="text-primary"><i class="bi bi-cash-stack me-2"></i>7. Financiamiento</h6>
-                    <p class="fw-bold">Viático: <?= formatMoney($cometido['viatico']) ?></p>
+                <div class="border-bottom border-primary border-3">
+                    <div class="bg-primary bg-opacity-10 px-3 py-2">
+                        <h6 class="text-primary mb-0"><i class="bi bi-cash-stack me-2"></i>7. Financiamiento</h6>
+                    </div>
+                    <div class="p-3">
+                        <p class="fw-bold mb-0">Viático: <?= formatMoney($cometido['viatico']) ?></p>
+                    </div>
                 </div>
                 
                 <!-- 8. Carácter del Cometido -->
-                <div class="mb-4">
-                    <h6 class="text-primary"><i class="bi bi-list-check me-2"></i>8. Carácter del Cometido</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        <span class="badge <?= $cometido['dentro_comuna'] ? 'bg-success' : 'bg-warning text-dark' ?>">
-                            <?= $cometido['dentro_comuna'] ? 'Dentro de la comuna' : 'Fuera de la comuna' ?>
-                        </span>
-                        <span class="badge <?= $cometido['dentro_jornada'] ? 'bg-success' : 'bg-warning text-dark' ?>">
-                            <?= $cometido['dentro_jornada'] ? 'Dentro de jornada laboral' : 'Fuera de jornada laboral' ?>
-                        </span>
-                        <span class="badge <?= $cometido['con_costo'] ? 'bg-danger' : 'bg-success' ?>">
-                            <?= $cometido['con_costo'] ? 'Con costo para la institución' : 'Sin costo para la institución' ?>
-                        </span>
+                <div class="<?= ($cometido['estado_id'] == 4 && $cometido['observaciones_rechazo']) ? 'border-bottom border-primary border-3' : '' ?>">
+                    <div class="bg-primary bg-opacity-10 px-3 py-2">
+                        <h6 class="text-primary mb-0"><i class="bi bi-list-check me-2"></i>8. Carácter del Cometido</h6>
+                    </div>
+                    <div class="p-3">
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge <?= $cometido['dentro_comuna'] ? 'bg-success' : 'bg-warning text-dark' ?>">
+                                <i class="bi <?= $cometido['dentro_comuna'] ? 'bi-check-circle' : 'bi-dash-circle' ?> me-1"></i>
+                                <?= $cometido['dentro_comuna'] ? 'Dentro de la comuna' : 'Fuera de la comuna' ?>
+                            </span>
+                            <span class="badge <?= $cometido['dentro_jornada'] ? 'bg-success' : 'bg-warning text-dark' ?>">
+                                <i class="bi <?= $cometido['dentro_jornada'] ? 'bi-check-circle' : 'bi-dash-circle' ?> me-1"></i>
+                                <?= $cometido['dentro_jornada'] ? 'Dentro de jornada laboral' : 'Fuera de jornada laboral' ?>
+                            </span>
+                            <span class="badge <?= $cometido['con_costo'] ? 'bg-danger' : 'bg-success' ?>">
+                                <i class="bi <?= $cometido['con_costo'] ? 'bi-currency-dollar' : 'bi-check-circle' ?> me-1"></i>
+                                <?= $cometido['con_costo'] ? 'Con costo para la institución' : 'Sin costo para la institución' ?>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 
                 <?php if ($cometido['estado_id'] == 4 && $cometido['observaciones_rechazo']): ?>
-                <div class="alert alert-danger">
-                    <h6><i class="bi bi-x-circle me-2"></i>Motivo del Rechazo</h6>
-                    <p class="mb-0"><?= nl2br(e($cometido['observaciones_rechazo'])) ?></p>
+                <div>
+                    <div class="bg-danger bg-opacity-10 px-3 py-2">
+                        <h6 class="text-danger mb-0"><i class="bi bi-x-circle me-2"></i>Motivo del Rechazo</h6>
+                    </div>
+                    <div class="p-3">
+                        <p class="mb-0"><?= nl2br(e($cometido['observaciones_rechazo'])) ?></p>
+                    </div>
                 </div>
                 <?php endif; ?>
             </div>
