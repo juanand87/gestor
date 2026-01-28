@@ -462,9 +462,9 @@ ob_start();
 var funcionariosData = {};
 <?php foreach ($funcionarios as $f): ?>
 funcionariosData[<?= $f['id'] ?>] = {
-    nombre: '<?= e($f['nombre'] . ' ' . $f['apellido_paterno'] . ' ' . $f['apellido_materno']) ?>',
-    rut: '<?= e($f['rut']) ?>',
-    cargo: '<?= e($f['cargo']) ?>'
+    nombre: <?= json_encode($f['nombre'] . ' ' . $f['apellido_paterno'] . ' ' . $f['apellido_materno'], JSON_UNESCAPED_UNICODE) ?>,
+    rut: <?= json_encode($f['rut'], JSON_UNESCAPED_UNICODE) ?>,
+    cargo: <?= json_encode($f['cargo'], JSON_UNESCAPED_UNICODE) ?>
 };
 <?php endforeach; ?>
 
