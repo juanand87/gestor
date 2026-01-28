@@ -161,8 +161,8 @@ ob_start();
             <div class="card-body p-0">
                 <!-- 1. Identificación del Funcionario -->
                 <div class="border-bottom border-primary border-3">
-                    <div class="bg-primary bg-opacity-10 px-3 py-2">
-                        <h6 class="text-primary mb-0"><i class="bi bi-people me-2"></i>1. Identificación del/los Funcionario(s)</h6>
+                    <div class="bg-primary px-3 py-2">
+                        <h6 class="text-white mb-0"><i class="bi bi-people me-2"></i>1. Identificación del/los Funcionario(s)</h6>
                     </div>
                     <div class="p-3">
                         <?php if (count($funcionariosCometido) == 1): ?>
@@ -208,8 +208,8 @@ ob_start();
                 <!-- 2. Autoridad que dispone -->
                 <?php if ($cometido['auto_nombre']): ?>
                 <div class="border-bottom border-primary border-3">
-                    <div class="bg-primary bg-opacity-10 px-3 py-2">
-                        <h6 class="text-primary mb-0"><i class="bi bi-person-badge me-2"></i>2. Autoridad que Dispone el Cometido</h6>
+                    <div class="bg-primary px-3 py-2">
+                        <h6 class="text-white mb-0"><i class="bi bi-person-badge me-2"></i>2. Autoridad que Dispone el Cometido</h6>
                     </div>
                     <div class="p-3">
                         <p class="fw-bold mb-0"><?= e($cometido['auto_nombre'] . ' ' . $cometido['auto_apellido'] . ' - ' . $cometido['auto_cargo']) ?></p>
@@ -219,8 +219,8 @@ ob_start();
                 
                 <!-- 3. Objetivo -->
                 <div class="border-bottom border-primary border-3">
-                    <div class="bg-primary bg-opacity-10 px-3 py-2">
-                        <h6 class="text-primary mb-0"><i class="bi bi-bullseye me-2"></i>3. Objetivo del Cometido</h6>
+                    <div class="bg-primary px-3 py-2">
+                        <h6 class="text-white mb-0"><i class="bi bi-bullseye me-2"></i>3. Objetivo del Cometido</h6>
                     </div>
                     <div class="p-3">
                         <p class="mb-0"><?= nl2br(e($cometido['objetivo'])) ?></p>
@@ -229,8 +229,8 @@ ob_start();
                 
                 <!-- 4. Lugar -->
                 <div class="border-bottom border-primary border-3">
-                    <div class="bg-primary bg-opacity-10 px-3 py-2">
-                        <h6 class="text-primary mb-0"><i class="bi bi-geo-alt me-2"></i>4. Lugar del Cometido</h6>
+                    <div class="bg-primary px-3 py-2">
+                        <h6 class="text-white mb-0"><i class="bi bi-geo-alt me-2"></i>4. Lugar del Cometido</h6>
                     </div>
                     <div class="p-3">
                         <div class="row">
@@ -254,8 +254,8 @@ ob_start();
                 
                 <!-- 5. Fecha y Duración -->
                 <div class="border-bottom border-primary border-3">
-                    <div class="bg-primary bg-opacity-10 px-3 py-2">
-                        <h6 class="text-primary mb-0"><i class="bi bi-calendar-event me-2"></i>5. Fecha y Duración</h6>
+                    <div class="bg-primary px-3 py-2">
+                        <h6 class="text-white mb-0"><i class="bi bi-calendar-event me-2"></i>5. Fecha y Duración</h6>
                     </div>
                     <div class="p-3">
                         <div class="row">
@@ -285,8 +285,8 @@ ob_start();
                 
                 <!-- 6. Medio de Traslado -->
                 <div class="border-bottom border-primary border-3">
-                    <div class="bg-primary bg-opacity-10 px-3 py-2">
-                        <h6 class="text-primary mb-0"><i class="bi bi-car-front me-2"></i>6. Medio de Traslado</h6>
+                    <div class="bg-primary px-3 py-2">
+                        <h6 class="text-white mb-0"><i class="bi bi-car-front me-2"></i>6. Medio de Traslado</h6>
                     </div>
                     <div class="p-3">
                         <p class="fw-bold mb-0">
@@ -300,8 +300,8 @@ ob_start();
                 
                 <!-- 7. Financiamiento -->
                 <div class="border-bottom border-primary border-3">
-                    <div class="bg-primary bg-opacity-10 px-3 py-2">
-                        <h6 class="text-primary mb-0"><i class="bi bi-cash-stack me-2"></i>7. Financiamiento</h6>
+                    <div class="bg-primary px-3 py-2">
+                        <h6 class="text-white mb-0"><i class="bi bi-cash-stack me-2"></i>7. Financiamiento</h6>
                     </div>
                     <div class="p-3">
                         <p class="fw-bold mb-0">Viático: <?= formatMoney($cometido['viatico']) ?></p>
@@ -310,8 +310,8 @@ ob_start();
                 
                 <!-- 8. Carácter del Cometido -->
                 <div class="<?= ($cometido['estado_id'] == 4 && $cometido['observaciones_rechazo']) ? 'border-bottom border-primary border-3' : '' ?>">
-                    <div class="bg-primary bg-opacity-10 px-3 py-2">
-                        <h6 class="text-primary mb-0"><i class="bi bi-list-check me-2"></i>8. Carácter del Cometido</h6>
+                    <div class="bg-primary px-3 py-2">
+                        <h6 class="text-white mb-0"><i class="bi bi-list-check me-2"></i>8. Carácter del Cometido</h6>
                     </div>
                     <div class="p-3">
                         <div class="d-flex flex-wrap gap-2">
