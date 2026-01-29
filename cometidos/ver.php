@@ -374,8 +374,8 @@ ob_start();
                         <?php endif; ?>
                         
                         <?php if ($cometido['estado_id'] == 3): ?>
-                            <a href="imprimir.php?id=<?= $cometido['id'] ?>" class="btn btn-outline-primary" target="_blank">
-                                <i class="bi bi-printer me-2"></i>Imprimir
+                            <a href="pdf.php?id=<?= $cometido['id'] ?>" class="btn btn-outline-primary">
+                                <i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF
                             </a>
                         <?php endif; ?>
                     </div>
