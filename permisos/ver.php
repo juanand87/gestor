@@ -314,8 +314,8 @@ ob_start();
                         <a href="<?= APP_URL ?>/permisos/" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left me-2"></i>Volver
                         </a>
-                        <a href="imprimir.php?id=<?= $solicitud['id'] ?>" class="btn btn-outline-primary" target="_blank">
-                            <i class="bi bi-printer me-2"></i>Imprimir
+                        <a href="pdf.php?id=<?= $solicitud['id'] ?>" class="btn btn-danger">
+                            <i class="bi bi-file-pdf me-2"></i>Descargar PDF
                         </a>
                     </div>
                     
