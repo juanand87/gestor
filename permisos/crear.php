@@ -75,13 +75,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'La fecha de término no puede ser anterior a la fecha de inicio';
     }
     
-    // Calcular días solicitados
+    // Función para calcular días hábiles (excluye sábados y domingos)
+    function calcularDiasHabiles($fechaInicio, $fechaTermino) {
+        $inicio = new DateTime($fechaInicio);
+        $termino = new DateTime($fechaTermino);
+        $dias = 0;
+        
+        while ($inicio <= $termino) {
+            $diaSemana = (int)$inicio->format('N'); // 1=Lunes, 7=Domingo
+            if ($diaSemana < 6) { // Lunes a Viernes
+                $dias++;
+            }
+            $inicio->modify('+1 day');
+        }
+        
+        return $dias;
+    }
+    
+    // Calcular días solicitados (solo días hábiles)
     $dias_solicitados = 0;
     if (!empty($fecha_inicio) && !empty($fecha_termino)) {
-        $inicio = new DateTime($fecha_inicio);
-        $termino = new DateTime($fecha_termino);
-        $diff = $inicio->diff($termino);
-        $dias_solicitados = $diff->days + 1;
+        $dias_solicitados = calcularDiasHabiles($fecha_inicio, $fecha_termino);
         
         // Si es medio día, ajustar
         if ($tipoCodigo == 'permiso_administrativo' && $es_medio_dia) {
@@ -317,7 +331,8 @@ ob_start();
                     <div class="mt-3">
                         <div class="alert alert-info mb-0">
                             <i class="bi bi-info-circle me-2"></i>
-                            <strong>Días a solicitar:</strong> <span id="dias_calculados">0</span> día(s)
+                            <strong>Días a solicitar:</strong> <span id="dias_calculados">0</span> día(s) hábiles
+                            <br><small class="text-muted">(Sábados y domingos no se cuentan)</small>
                         </div>
                     </div>
                 </div>
@@ -392,6 +407,23 @@ ob_start();
 ?>
 <script>
 $(document).ready(function() {
+    // Función para calcular días hábiles (excluye sábados y domingos)
+    function calcularDiasHabiles(fechaInicio, fechaTermino) {
+        var dias = 0;
+        var actual = new Date(fechaInicio);
+        var fin = new Date(fechaTermino);
+        
+        while (actual <= fin) {
+            var diaSemana = actual.getDay(); // 0=Domingo, 6=Sábado
+            if (diaSemana !== 0 && diaSemana !== 6) {
+                dias++;
+            }
+            actual.setDate(actual.getDate() + 1);
+        }
+        
+        return dias;
+    }
+    
     // Calcular días
     function calcularDias() {
         var inicio = $('#fecha_inicio').val();
@@ -399,9 +431,9 @@ $(document).ready(function() {
         var esMedioDia = $('#es_medio_dia').is(':checked');
         
         if (inicio && termino) {
-            var fechaInicio = new Date(inicio);
-            var fechaTermino = new Date(termino);
-            var diff = Math.ceil((fechaTermino - fechaInicio) / (1000 * 60 * 60 * 24)) + 1;
+            var fechaInicio = new Date(inicio + 'T00:00:00');
+            var fechaTermino = new Date(termino + 'T00:00:00');
+            var diff = calcularDiasHabiles(fechaInicio, fechaTermino);
             
             if (esMedioDia) {
                 diff = 0.5;

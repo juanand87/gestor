@@ -78,11 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Obtener info del tipo
         $tipo = $db->selectOne("SELECT * FROM tipos_permiso WHERE id = ?", [$tipo_id]);
         
-        // Calcular días
-        $d1 = new DateTime($fecha_inicio);
-        $d2 = new DateTime($fecha_termino);
-        $diff = $d1->diff($d2);
-        $dias = $diff->days + 1;
+        // Función para calcular días hábiles (excluye sábados y domingos)
+        $inicio = new DateTime($fecha_inicio);
+        $termino = new DateTime($fecha_termino);
+        $dias = 0;
+        
+        while ($inicio <= $termino) {
+            $diaSemana = (int)$inicio->format('N'); // 1=Lunes, 7=Domingo
+            if ($diaSemana < 6) { // Lunes a Viernes
+                $dias++;
+            }
+            $inicio->modify('+1 day');
+        }
         
         if ($tipo['codigo'] == 'permiso_administrativo' && $es_medio_dia) {
             $dias = 0.5;
@@ -308,7 +315,8 @@ ob_start();
                     <div class="mb-3">
                         <div class="alert alert-secondary" id="info_dias">
                             <i class="bi bi-calculator me-2"></i>
-                            <strong>Días a solicitar:</strong> <span id="dias_calculados"><?= $solicitud['dias_solicitados'] ?></span>
+                            <strong>Días a solicitar:</strong> <span id="dias_calculados"><?= $solicitud['dias_solicitados'] ?></span> día(s) hábiles
+                            <br><small class="text-muted">(Sábados y domingos no se cuentan)</small>
                         </div>
                     </div>
                     
@@ -389,16 +397,32 @@ document.addEventListener('DOMContentLoaded', function() {
         calcularDias();
     }
     
+    // Función para calcular días hábiles (excluye sábados y domingos)
+    function calcularDiasHabiles(fechaInicio, fechaTermino) {
+        let dias = 0;
+        let actual = new Date(fechaInicio);
+        let fin = new Date(fechaTermino);
+        
+        while (actual <= fin) {
+            let diaSemana = actual.getDay(); // 0=Domingo, 6=Sábado
+            if (diaSemana !== 0 && diaSemana !== 6) {
+                dias++;
+            }
+            actual.setDate(actual.getDate() + 1);
+        }
+        
+        return dias;
+    }
+    
     function calcularDias() {
         if (!fechaInicio.value || !fechaTermino.value) {
             diasCalculados.textContent = '0';
             return;
         }
         
-        const d1 = new Date(fechaInicio.value);
-        const d2 = new Date(fechaTermino.value);
-        const diffTime = d2 - d1;
-        let dias = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        const d1 = new Date(fechaInicio.value + 'T00:00:00');
+        const d2 = new Date(fechaTermino.value + 'T00:00:00');
+        let dias = calcularDiasHabiles(d1, d2);
         
         if (dias < 0) dias = 0;
         
