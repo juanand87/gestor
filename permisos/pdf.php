@@ -46,8 +46,8 @@ if (!$solicitud) {
 }
 
 // Verificar permisos de acceso
-if ($user['rol_id'] != ROL_ADMIN && $solicitud['solicitado_por'] != $user['id']) {
-    if (!($user['funcionario_id'] && $solicitud['funcionario_id'] == $user['funcionario_id'])) {
+if (!Auth::isAdmin() && !Auth::isSecretarioEjecutivo()) {
+    if ($solicitud['solicitado_por'] != $user['id'] && $solicitud['funcionario_id'] != $user['funcionario_id']) {
         die('No tiene permiso para ver esta solicitud.');
     }
 }

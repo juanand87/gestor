@@ -41,7 +41,7 @@ if ($solicitud['estado_id'] != 1) {
 }
 
 // Verificar permisos (solo el solicitante o admin puede editar)
-if ($user['rol_id'] != ROL_ADMIN && $solicitud['solicitado_por'] != $user['id']) {
+if (!Auth::isAdmin() && $solicitud['solicitado_por'] != $user['id']) {
     Session::setFlash('No tienes permiso para editar esta solicitud.', 'danger');
     redirect('permisos/');
 }
