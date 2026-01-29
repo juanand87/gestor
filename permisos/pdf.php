@@ -52,19 +52,6 @@ if (!Auth::isAdmin() && !Auth::isSecretarioEjecutivo()) {
     }
 }
 
-// Obtener historial
-$historial = $db->select(
-    "SELECT h.*, h.created_at as fecha, en.nombre as estado_nombre,
-            u.username, f.nombre as usuario_nombre, f.apellido_paterno as usuario_apellido
-     FROM historial_permisos h
-     INNER JOIN usuarios u ON h.usuario_id = u.id
-     LEFT JOIN funcionarios f ON u.funcionario_id = f.id
-     LEFT JOIN estados_permiso en ON h.estado_nuevo_id = en.id
-     WHERE h.solicitud_id = ?
-     ORDER BY h.created_at ASC",
-    [$id]
-);
-
 // Función para fecha en español
 function fechaEspanol($fecha) {
     if (!$fecha) return '-';
@@ -193,43 +180,6 @@ if (!empty($solicitud['motivo'])) {
     $pdf->SetFont('helvetica', '', 9);
     $pdf->MultiCell(0, 6, $solicitud['motivo'], 1, 'L');
     $pdf->Ln(3);
-}
-
-// INFORMACIÓN DE LA SOLICITUD
-crearSeccion($pdf, 'INFORMACIÓN DE LA SOLICITUD');
-crearFila($pdf, 'Solicitado por:', $solicitud['solicitante_nombre'] . ' ' . $solicitud['solicitante_apellido']);
-crearFila($pdf, 'Fecha de Creación:', fechaEspanol($solicitud['created_at']));
-if ($solicitud['fecha_autorizacion']) {
-    crearFila($pdf, 'Fecha de Resolución:', fechaEspanol($solicitud['fecha_autorizacion']));
-}
-$pdf->Ln(3);
-
-// HISTORIAL
-if (!empty($historial)) {
-    crearSeccion($pdf, 'HISTORIAL DE LA SOLICITUD');
-    
-    // Encabezados de tabla
-    $pdf->SetFont('helvetica', 'B', 8);
-    $pdf->SetFillColor(0, 51, 102);
-    $pdf->SetTextColor(255, 255, 255);
-    $pdf->Cell(35, 6, 'Fecha', 1, 0, 'C', true);
-    $pdf->Cell(50, 6, 'Acción', 1, 0, 'C', true);
-    $pdf->Cell(45, 6, 'Usuario', 1, 0, 'C', true);
-    $pdf->Cell(50, 6, 'Observaciones', 1, 1, 'C', true);
-    
-    $pdf->SetFont('helvetica', '', 8);
-    $pdf->SetTextColor(0, 0, 0);
-    $fill = false;
-    
-    foreach ($historial as $h) {
-        $pdf->SetFillColor($fill ? 249 : 255, $fill ? 249 : 255, $fill ? 249 : 255);
-        $pdf->Cell(35, 6, date('d/m/Y H:i', strtotime($h['fecha'])), 1, 0, 'L', true);
-        $pdf->Cell(50, 6, $h['accion'], 1, 0, 'L', true);
-        $pdf->Cell(45, 6, ($h['usuario_nombre'] ?? '') . ' ' . ($h['usuario_apellido'] ?? ''), 1, 0, 'L', true);
-        $pdf->Cell(50, 6, $h['observaciones'] ?? '-', 1, 1, 'L', true);
-        $fill = !$fill;
-    }
-    $pdf->Ln(5);
 }
 
 // FIRMAS (solo si está autorizado)
