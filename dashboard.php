@@ -55,7 +55,7 @@ if ($user['funcionario_id']) {
     $stats['dias_feriado'] = $feriado ? $feriado['disponibles'] : 0;
     
     $admin = $db->selectOne(
-        "SELECT dias_totales - dias_utilizados as disponibles 
+        "SELECT dias_disponibles - dias_utilizados as disponibles 
          FROM permisos_administrativos_config 
          WHERE funcionario_id = :func_id AND anio = :anio",
         ['func_id' => $user['funcionario_id'], 'anio' => date('Y')]

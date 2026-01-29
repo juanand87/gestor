@@ -125,12 +125,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $db->insert('permisos_administrativos_config', [
                     'funcionario_id' => $funcionario_id,
                     'anio' => date('Y'),
-                    'dias_totales' => 6
+                    'dias_disponibles' => 6
                 ]);
-                $config = ['dias_totales' => 6, 'dias_utilizados' => 0];
+                $config = ['dias_disponibles' => 6, 'dias_utilizados' => 0];
             }
             
-            $dias_disponibles = $config['dias_totales'] - $config['dias_utilizados'];
+            $dias_disponibles = $config['dias_disponibles'] - $config['dias_utilizados'];
             
             // Sumar los días de la solicitud original
             if ($solicitud['tipo_codigo'] == 'permiso_administrativo') {
