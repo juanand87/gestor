@@ -99,24 +99,18 @@ function getMedioTrasladoTextoPDF($medio) {
 // Crear PDF
 class CometidoPDF extends TCPDF {
     public function Header() {
-        $this->SetFont('helvetica', 'B', 14);
+        $this->SetFont('helvetica', 'B', 12);
         $this->SetTextColor(0, 51, 102);
-        $this->Cell(0, 10, 'ASOCIACIÓN DE MUNICIPIOS', 0, 1, 'C');
-        $this->SetFont('helvetica', '', 11);
-        $this->SetTextColor(0, 0, 0);
-        $this->Cell(0, 6, 'Cometido Funcionario', 0, 1, 'C');
-        $this->Ln(5);
-        $this->Line(10, $this->GetY(), 200, $this->GetY());
-        $this->Ln(5);
+        $this->Cell(0, 8, 'ASOCIACIÓN DE MUNICIPIOS - COMETIDO FUNCIONARIO', 0, 1, 'C');
+        $this->Line(15, $this->GetY(), 200, $this->GetY());
+        $this->Ln(3);
     }
     
     public function Footer() {
-        $this->SetY(-20);
-        $this->SetFont('helvetica', 'I', 8);
+        $this->SetY(-15);
+        $this->SetFont('helvetica', 'I', 7);
         $this->SetTextColor(128, 128, 128);
-        $this->Cell(0, 5, 'Documento generado el ' . date('d/m/Y H:i:s'), 0, 1, 'C');
-        $this->Cell(0, 5, 'Sistema de Gestión Documental - Asociación de Municipios', 0, 1, 'C');
-        $this->Cell(0, 5, 'Página ' . $this->getAliasNumPage() . ' de ' . $this->getAliasNbPages(), 0, 0, 'C');
+        $this->Cell(0, 4, 'Documento generado el ' . date('d/m/Y H:i') . ' - Sistema de Gestión Documental', 0, 0, 'C');
     }
 }
 
@@ -128,187 +122,146 @@ $pdf->SetAuthor('Asociación de Municipios');
 $pdf->SetTitle('Cometido - ' . $cometido['numero_cometido']);
 $pdf->SetSubject('Cometido Funcionario');
 
-// Márgenes
-$pdf->SetMargins(15, 40, 15);
+// Márgenes más compactos
+$pdf->SetMargins(15, 25, 15);
 $pdf->SetHeaderMargin(10);
-$pdf->SetFooterMargin(15);
+$pdf->SetFooterMargin(10);
 
 // Configuración de página
-$pdf->SetAutoPageBreak(TRUE, 25);
+$pdf->SetAutoPageBreak(TRUE, 15);
 $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
 
 // Agregar página
 $pdf->AddPage();
 
-// Título
-$pdf->SetFont('helvetica', 'B', 12);
-$pdf->SetFillColor(0, 51, 102);
-$pdf->SetTextColor(255, 255, 255);
-$pdf->Cell(0, 10, 'COMETIDO FUNCIONARIO', 1, 1, 'C', true);
-
-// Número de cometido
-$pdf->SetFont('helvetica', '', 10);
-$pdf->SetTextColor(100, 100, 100);
-$pdf->Cell(0, 8, 'Nº ' . $cometido['numero_cometido'], 0, 1, 'C');
-$pdf->Ln(3);
-
-// Estado
-$estadoColor = [200, 200, 200]; // Gris por defecto
-if ($cometido['estado_id'] == 3) $estadoColor = [212, 237, 218]; // Verde - Autorizado
-elseif ($cometido['estado_id'] == 4) $estadoColor = [248, 215, 218]; // Rojo - Rechazado
-elseif ($cometido['estado_id'] == 2) $estadoColor = [255, 243, 205]; // Amarillo - Pendiente
-
+// Número y Estado en una línea
 $pdf->SetFont('helvetica', 'B', 11);
+$pdf->SetTextColor(0, 51, 102);
+$pdf->Cell(90, 7, 'Nº ' . $cometido['numero_cometido'], 0, 0, 'L');
+
+$estadoColor = [200, 200, 200];
+if ($cometido['estado_id'] == 3) $estadoColor = [212, 237, 218];
+elseif ($cometido['estado_id'] == 4) $estadoColor = [248, 215, 218];
+elseif ($cometido['estado_id'] == 2) $estadoColor = [255, 243, 205];
+
 $pdf->SetFillColor($estadoColor[0], $estadoColor[1], $estadoColor[2]);
 $pdf->SetTextColor(0, 0, 0);
-$pdf->Cell(0, 10, 'ESTADO: ' . strtoupper($cometido['estado_nombre']), 1, 1, 'C', true);
+$pdf->Cell(0, 7, strtoupper($cometido['estado_nombre']), 1, 1, 'C', true);
+$pdf->Ln(2);
 
-if ($cometido['fecha_autorizacion'] && $cometido['auto_nombre']) {
-    $pdf->SetFont('helvetica', '', 9);
-    $pdf->Cell(0, 6, 'Autorizado el ' . fechaEspanol($cometido['fecha_autorizacion']) . 
-               ' por ' . $cometido['auto_nombre'] . ' ' . $cometido['auto_apellido'], 0, 1, 'C');
-}
-$pdf->Ln(5);
-
-// Función para crear secciones
-function crearSeccion($pdf, $numero, $titulo) {
-    $pdf->SetFont('helvetica', 'B', 10);
+// Función para crear secciones compactas
+function crearSeccion($pdf, $titulo) {
+    $pdf->SetFont('helvetica', 'B', 8);
     $pdf->SetFillColor(0, 51, 102);
     $pdf->SetTextColor(255, 255, 255);
-    $pdf->Cell(0, 8, $numero . '. ' . $titulo, 1, 1, 'L', true);
+    $pdf->Cell(0, 5, $titulo, 1, 1, 'L', true);
     $pdf->SetTextColor(0, 0, 0);
 }
 
-function crearFila($pdf, $label, $value, $labelWidth = 60) {
-    $pdf->SetFont('helvetica', 'B', 9);
-    $pdf->SetFillColor(245, 245, 245);
-    $pdf->Cell($labelWidth, 7, $label, 1, 0, 'L', true);
-    $pdf->SetFont('helvetica', '', 9);
-    $pdf->Cell(0, 7, $value, 1, 1, 'L');
+function crearFila($pdf, $label, $value, $labelWidth = 45) {
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->SetFillColor(250, 250, 250);
+    $pdf->Cell($labelWidth, 5, $label, 'LTB', 0, 'L', true);
+    $pdf->SetFont('helvetica', '', 8);
+    $pdf->Cell(0, 5, $value, 'RTB', 1, 'L');
 }
 
-// 1. IDENTIFICACIÓN DEL FUNCIONARIO
-crearSeccion($pdf, '1', 'IDENTIFICACIÓN DEL/LOS FUNCIONARIO(S)');
-
+// FUNCIONARIO(S)
+crearSeccion($pdf, 'FUNCIONARIO(S)');
 if (count($funcionariosCometido) == 1) {
     $f = $funcionariosCometido[0];
-    crearFila($pdf, 'Nombre Completo:', $f['nombre'] . ' ' . $f['apellido_paterno'] . ' ' . $f['apellido_materno']);
-    crearFila($pdf, 'RUT:', $f['rut']);
-    crearFila($pdf, 'Cargo:', $f['cargo']);
-} else {
-    // Tabla para múltiples funcionarios
-    $pdf->SetFont('helvetica', 'B', 8);
-    $pdf->SetFillColor(240, 240, 240);
-    $pdf->Cell(80, 6, 'Nombre Completo', 1, 0, 'C', true);
-    $pdf->Cell(40, 6, 'RUT', 1, 0, 'C', true);
-    $pdf->Cell(60, 6, 'Cargo', 1, 1, 'C', true);
-    
     $pdf->SetFont('helvetica', '', 8);
+    $pdf->Cell(0, 5, $f['nombre'] . ' ' . $f['apellido_paterno'] . ' ' . $f['apellido_materno'] . ' | RUT: ' . $f['rut'] . ' | ' . $f['cargo'], 1, 1, 'L');
+} else {
+    $pdf->SetFont('helvetica', '', 7);
     foreach ($funcionariosCometido as $f) {
-        $pdf->Cell(80, 6, $f['nombre'] . ' ' . $f['apellido_paterno'] . ' ' . $f['apellido_materno'], 1, 0, 'L');
-        $pdf->Cell(40, 6, $f['rut'], 1, 0, 'L');
-        $pdf->Cell(60, 6, $f['cargo'], 1, 1, 'L');
+        $pdf->Cell(0, 4, $f['nombre'] . ' ' . $f['apellido_paterno'] . ' ' . $f['apellido_materno'] . ' - ' . $f['rut'] . ' - ' . $f['cargo'], 1, 1, 'L');
     }
 }
-$pdf->Ln(3);
+$pdf->Ln(1);
 
-// 2. AUTORIDAD QUE DISPONE (si existe)
-if ($cometido['auto_nombre']) {
-    crearSeccion($pdf, '2', 'AUTORIDAD QUE DISPONE EL COMETIDO');
-    crearFila($pdf, 'Autoridad:', $cometido['auto_nombre'] . ' ' . $cometido['auto_apellido'] . ' - ' . $cometido['auto_cargo']);
-    $pdf->Ln(3);
+// OBJETIVO
+crearSeccion($pdf, 'OBJETIVO');
+$pdf->SetFont('helvetica', '', 8);
+$pdf->MultiCell(0, 4, $cometido['objetivo'], 1, 'L');
+$pdf->Ln(1);
+
+// LUGAR Y FECHAS en columnas
+crearSeccion($pdf, 'LUGAR Y PERÍODO');
+$pdf->SetFont('helvetica', '', 8);
+$lugarTexto = $cometido['ciudad'] . ', ' . $cometido['comuna'];
+if ($cometido['lugar_descripcion']) $lugarTexto .= ' (' . $cometido['lugar_descripcion'] . ')';
+$pdf->Cell(90, 5, 'Lugar: ' . $lugarTexto, 1, 0, 'L');
+$fechaTexto = date('d/m/Y', strtotime($cometido['fecha_inicio']));
+if ($cometido['fecha_termino'] != $cometido['fecha_inicio']) {
+    $fechaTexto .= ' al ' . date('d/m/Y', strtotime($cometido['fecha_termino']));
 }
+$pdf->Cell(0, 5, 'Fecha: ' . $fechaTexto, 1, 1, 'L');
 
-// 3. OBJETIVO
-crearSeccion($pdf, '3', 'OBJETIVO DEL COMETIDO');
-$pdf->SetFont('helvetica', '', 9);
-$pdf->MultiCell(0, 6, $cometido['objetivo'], 1, 'L');
-$pdf->Ln(3);
-
-// 4. LUGAR
-crearSeccion($pdf, '4', 'LUGAR DEL COMETIDO');
-crearFila($pdf, 'Ciudad:', $cometido['ciudad']);
-crearFila($pdf, 'Comuna:', $cometido['comuna']);
-if ($cometido['lugar_descripcion']) {
-    crearFila($pdf, 'Descripción:', $cometido['lugar_descripcion']);
+if ($cometido['horario_inicio'] || $cometido['horario_termino']) {
+    $horario = '';
+    if ($cometido['horario_inicio']) $horario .= 'Desde: ' . $cometido['horario_inicio'];
+    if ($cometido['horario_termino']) $horario .= ' Hasta: ' . $cometido['horario_termino'];
+    $pdf->Cell(0, 5, $horario, 1, 1, 'L');
 }
-$pdf->Ln(3);
+$pdf->Ln(1);
 
-// 5. FECHA Y DURACIÓN
-crearSeccion($pdf, '5', 'FECHA Y DURACIÓN');
-crearFila($pdf, 'Fecha de Inicio:', fechaEspanol($cometido['fecha_inicio']));
-crearFila($pdf, 'Fecha de Término:', fechaEspanol($cometido['fecha_termino']));
-if ($cometido['horario_inicio']) {
-    crearFila($pdf, 'Horario Inicio:', $cometido['horario_inicio']);
-}
-if ($cometido['horario_termino']) {
-    crearFila($pdf, 'Horario Término:', $cometido['horario_termino']);
-}
-$pdf->Ln(3);
-
-// 6. MEDIO DE TRASLADO
-crearSeccion($pdf, '6', 'MEDIO DE TRASLADO');
+// TRASLADO Y FINANCIAMIENTO
+crearSeccion($pdf, 'TRASLADO Y FINANCIAMIENTO');
 $medioTexto = getMedioTrasladoTextoPDF($cometido['medio_traslado']);
-if ($cometido['patente_vehiculo']) {
-    $medioTexto .= ' (Patente: ' . $cometido['patente_vehiculo'] . ')';
-}
-crearFila($pdf, 'Medio:', $medioTexto);
-$pdf->Ln(3);
+if ($cometido['patente_vehiculo']) $medioTexto .= ' (Patente: ' . $cometido['patente_vehiculo'] . ')';
+$pdf->SetFont('helvetica', '', 8);
+$pdf->Cell(90, 5, 'Medio: ' . $medioTexto, 1, 0, 'L');
+$pdf->Cell(0, 5, 'Viático: $' . number_format($cometido['viatico'], 0, ',', '.'), 1, 1, 'L');
+$pdf->Ln(1);
 
-// 7. FINANCIAMIENTO
-crearSeccion($pdf, '7', 'FINANCIAMIENTO');
-crearFila($pdf, 'Viático:', '$' . number_format($cometido['viatico'], 0, ',', '.'));
-$pdf->Ln(3);
-
-// 8. CARÁCTER DEL COMETIDO
-crearSeccion($pdf, '8', 'CARÁCTER DEL COMETIDO');
-$pdf->SetFont('helvetica', '', 9);
-$caracteristicas = [];
-$caracteristicas[] = $cometido['dentro_comuna'] ? '✓ Dentro de la comuna' : '✗ Fuera de la comuna';
-$caracteristicas[] = $cometido['dentro_jornada'] ? '✓ Dentro de jornada laboral' : '✗ Fuera de jornada laboral';
-$caracteristicas[] = $cometido['con_costo'] ? '✓ Con costo para la institución' : '✗ Sin costo para la institución';
-$pdf->MultiCell(0, 6, implode("\n", $caracteristicas), 1, 'L');
-$pdf->Ln(3);
+// CARÁCTER - en una sola línea
+crearSeccion($pdf, 'CARÁCTER DEL COMETIDO');
+$pdf->SetFont('helvetica', '', 8);
+$caracter = [];
+$caracter[] = $cometido['dentro_comuna'] ? 'Dentro comuna' : 'Fuera comuna';
+$caracter[] = $cometido['dentro_jornada'] ? 'Dentro jornada' : 'Fuera jornada';
+$caracter[] = $cometido['con_costo'] ? 'Con costo' : 'Sin costo';
+$pdf->Cell(0, 5, implode(' | ', $caracter), 1, 1, 'L');
+$pdf->Ln(1);
 
 // MOTIVO DE RECHAZO (si aplica)
 if ($cometido['estado_id'] == 4 && $cometido['observaciones_rechazo']) {
-    $pdf->SetFont('helvetica', 'B', 10);
+    $pdf->SetFont('helvetica', 'B', 8);
     $pdf->SetFillColor(248, 215, 218);
     $pdf->SetTextColor(114, 28, 36);
-    $pdf->Cell(0, 8, 'MOTIVO DEL RECHAZO', 1, 1, 'L', true);
+    $pdf->Cell(0, 5, 'MOTIVO DEL RECHAZO', 1, 1, 'L', true);
     $pdf->SetTextColor(0, 0, 0);
-    $pdf->SetFont('helvetica', '', 9);
-    $pdf->MultiCell(0, 6, $cometido['observaciones_rechazo'], 1, 'L');
-    $pdf->Ln(3);
+    $pdf->SetFont('helvetica', '', 8);
+    $pdf->MultiCell(0, 4, $cometido['observaciones_rechazo'], 1, 'L');
+    $pdf->Ln(1);
 }
 
 // FIRMAS (solo si está autorizado)
 if ($cometido['estado_id'] == 3) {
-    $pdf->Ln(15);
-    
-    // Líneas de firma
-    $y = $pdf->GetY() + 20;
+    $pdf->Ln(10);
+    $y = $pdf->GetY() + 12;
     
     // Firma funcionario (si es uno solo)
     if (count($funcionariosCometido) == 1) {
         $f = $funcionariosCometido[0];
-        $pdf->Line(25, $y, 90, $y);
-        $pdf->SetXY(25, $y + 2);
-        $pdf->SetFont('helvetica', 'B', 9);
-        $pdf->Cell(65, 5, $f['nombre'] . ' ' . $f['apellido_paterno'], 0, 0, 'C');
-        $pdf->SetXY(25, $y + 7);
-        $pdf->SetFont('helvetica', '', 8);
-        $pdf->Cell(65, 5, 'Funcionario', 0, 0, 'C');
+        $pdf->Line(25, $y, 85, $y);
+        $pdf->SetXY(25, $y + 1);
+        $pdf->SetFont('helvetica', 'B', 8);
+        $pdf->Cell(60, 4, $f['nombre'] . ' ' . $f['apellido_paterno'], 0, 0, 'C');
+        $pdf->SetXY(25, $y + 5);
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->Cell(60, 4, 'Funcionario', 0, 0, 'C');
     }
     
     // Firma Secretario Ejecutivo
-    $pdf->Line(120, $y, 185, $y);
-    $pdf->SetXY(120, $y + 2);
-    $pdf->SetFont('helvetica', 'B', 9);
-    $pdf->Cell(65, 5, ($cometido['auto_nombre'] ?? '') . ' ' . ($cometido['auto_apellido'] ?? ''), 0, 0, 'C');
-    $pdf->SetXY(120, $y + 7);
-    $pdf->SetFont('helvetica', '', 8);
-    $pdf->Cell(65, 5, 'Secretario Ejecutivo', 0, 0, 'C');
+    $pdf->Line(125, $y, 185, $y);
+    $pdf->SetXY(125, $y + 1);
+    $pdf->SetFont('helvetica', 'B', 8);
+    $pdf->Cell(60, 4, ($cometido['auto_nombre'] ?? '') . ' ' . ($cometido['auto_apellido'] ?? ''), 0, 0, 'C');
+    $pdf->SetXY(125, $y + 5);
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->Cell(60, 4, 'Secretario Ejecutivo', 0, 0, 'C');
 }
 
 // Generar nombre del archivo
