@@ -64,13 +64,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $es_medio_dia = isset($_POST['es_medio_dia']) ? 1 : 0;
     $medio_dia_tipo = $_POST['medio_dia_tipo'] ?? null;
     
+    // Si es medio día, la fecha de término es igual a la de inicio
+    if ($es_medio_dia && !empty($fecha_inicio)) {
+        $fecha_termino = $fecha_inicio;
+    }
+    
     // Para feriado legal
     $anio_descuento = (int)($_POST['anio_descuento'] ?? $anioActual);
     
     // Validaciones
     if ($funcionario_id <= 0) $errors[] = 'Debe seleccionar un funcionario';
     if (empty($fecha_inicio)) $errors[] = 'La fecha de inicio es requerida';
-    if (empty($fecha_termino)) $errors[] = 'La fecha de término es requerida';
+    if (empty($fecha_termino) && !$es_medio_dia) $errors[] = 'La fecha de término es requerida';
     if (!empty($fecha_inicio) && !empty($fecha_termino) && $fecha_termino < $fecha_inicio) {
         $errors[] = 'La fecha de término no puede ser anterior a la fecha de inicio';
     }
@@ -455,13 +460,20 @@ $(document).ready(function() {
         if ($(this).is(':checked')) {
             $('#medio_dia_options').slideDown();
             $('#fecha_termino').val($('#fecha_inicio').val());
-            $('#fecha_termino').prop('disabled', true);
+            $('#fecha_termino').prop('readonly', true);
             $('#tipo_manana').prop('checked', true);
         } else {
             $('#medio_dia_options').slideUp();
-            $('#fecha_termino').prop('disabled', false);
+            $('#fecha_termino').prop('readonly', false);
         }
         calcularDias();
+    });
+    
+    // Actualizar fecha_termino cuando cambia fecha_inicio y es medio día
+    $('#fecha_inicio').on('change', function() {
+        if ($('#es_medio_dia').is(':checked')) {
+            $('#fecha_termino').val($(this).val());
+        }
     });
     
     // Inicializar Select2
